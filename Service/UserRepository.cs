@@ -3,6 +3,7 @@ using AuthFilterProj.Data;
 using AuthFilterProj.Dtos;
 using AuthFilterProj.Interface;
 using AuthFilterProj.Models;
+using AuthFilterProj.Templates;
 using AuthFilterProj.Utils;
 using Microsoft.EntityFrameworkCore;
 
@@ -74,8 +75,8 @@ namespace AuthFilterProj.Service
 
             _logger.LogInformation("User created successfully!");
 
-            // send email
-            _emailService.Send(user.Email, "Verify your email", $"<p>Hi {user.Name},</p><p>Thank you for registering. Please verify your email by entering the following OTP:</p><p><strong>{otp.OtpCode}</strong></p><p>Regards,<br />AuthFilterProj</p>");
+        string emailContent = EmailTemplates.GetVerificationEmail(user.Name, otp.OtpCode);
+         _emailService.Send(user.Email, "Verify your email", emailContent);
             
 
             return response;
