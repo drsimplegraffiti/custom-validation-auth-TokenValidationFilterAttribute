@@ -518,3 +518,6 @@ app.Run();
 ```csharp
 
 ```
+
+##### Install MailKit
+- dotnet add package MailKit --version 2.15.0

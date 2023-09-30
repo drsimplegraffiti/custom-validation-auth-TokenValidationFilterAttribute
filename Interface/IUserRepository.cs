@@ -14,19 +14,12 @@ namespace AuthFilterProj.Interface
         bool GetUserByEmail(string email);
         Task<Response<LoginResponseDto>> RefreshTokenAsync(string refreshToken);
 
-       //verify otp
         Task<Response<string>> VerifyOtpAsync(VerifyOtpDto verifyOtpDto);
         Task<Response<string>> ResendOtpAsync(ResendOtpDto resendOtpDto);
+
+        Task<Response<string>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
+        Task<Response<string>> ResetPasswordAsync(ResetPasswordDto resetPasswordDto);
     }
 
-    public class ResendOtpDto
-    {
-        public string Email { get; set; } = string.Empty;
-    }
-
-    public class VerifyOtpDto
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Otp { get; set; } = string.Empty;
-    }
+ 
 }

@@ -3,6 +3,7 @@ using AuthFilterProj.Custom;
 using AuthFilterProj.Data;
 using AuthFilterProj.Interface;
 using AuthFilterProj.Service;
+using AuthFilterProj.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -12,11 +13,14 @@ var timeZone = builder.Configuration["TimeZone"];
 TimeZoneInfo lagosTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZone ?? string.Empty);
 
 
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<TokenValidationFilterAttribute>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 
 
 

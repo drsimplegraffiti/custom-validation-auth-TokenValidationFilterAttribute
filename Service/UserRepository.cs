@@ -12,14 +12,16 @@ namespace AuthFilterProj.Service
     {
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
         private readonly ILogger<UserRepository> _logger;
 
-        public UserRepository(DataContext context, IConfiguration configuration, ILogger<UserRepository> logger)
+        public UserRepository(DataContext context, IConfiguration configuration, ILogger<UserRepository> logger, IEmailService emailService)
         {
             _context = context;
             _configuration = configuration;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<Response<ReadUserDto>> CreateUserAsync(CreateUserDto createUserDto)
@@ -71,6 +73,10 @@ namespace AuthFilterProj.Service
             };
 
             _logger.LogInformation("User created successfully!");
+
+            // send email
+            _emailService.Send(user.Email, "Verify your email", $"<p>Hi {user.Name},</p><p>Thank you for registering. Please verify your email by entering the following OTP:</p><p><strong>{otp.OtpCode}</strong></p><p>Regards,<br />AuthFilterProj</p>");
+            
 
             return response;
         }
@@ -449,6 +455,16 @@ namespace AuthFilterProj.Service
                 Success = true,
                 Message = "OTP sent successfully."
             });
+        }
+
+        public Task<Response<string>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Response<string>> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+        {
+            throw new NotImplementedException();
         }
     }
 }
