@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AuthFilterProj.Data;
 using AuthFilterProj.Dtos;
 using AuthFilterProj.Interface;
@@ -43,7 +44,7 @@ namespace AuthFilterProj.Service
 
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
-            
+
 
             var readUserDto = new ReadUserDto
             {
@@ -182,44 +183,78 @@ namespace AuthFilterProj.Service
 
         public async Task<Response<LoginResponseDto>> LoginAsync(LoginDto loginRequestDto)
         {
-            // Find the user by email in your database
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequestDto.Email);
-
-            if (user == null)
+            try
             {
-                // User not found, return an error response
+                // Find the user by email in your database
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequestDto.Email);
+
+                if (user == null)
+                {
+                    // User not found, return an error response
+                    return new Response<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = "Invalid credentials."
+                    };
+                }
+
+                // Verify the password
+                if (!BCrypt.Net.BCrypt.Verify(loginRequestDto.Password, user.Password))
+                {
+                    // Password doesn't match, return an error response
+                    return new Response<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = "Invalid credentials."
+                    };
+                }
+
+                // Password is correct, generate a token
+                var tokenUtils = new TokenUtils(_configuration["JWT:SecretKey"] ?? string.Empty);
+                var loginResponseDto = new LoginResponseDto
+                {
+                    Token = tokenUtils.GenerateToken(user),
+                    RefreshToken = tokenUtils.GenerateRefreshToken()
+                };
+
+                // remove old refresh token and token
+                var OldserToken = await _context.UserTokens.FirstOrDefaultAsync(u => u.UserId == user.Id);
+                _logger.LogInformation($"OldserToken: {OldserToken}");
+                if (OldserToken != null)
+                {
+                    _context.UserTokens.Remove(OldserToken);
+                }
+
+
+
+                // Save the token and the refresh token in your database
+                var userToken = new UserToken
+                {
+                    Token = loginResponseDto.Token,
+                    RefreshToken = loginResponseDto.RefreshToken,
+                    UserId = user.Id
+                };
+
+                await _context.UserTokens.AddAsync(userToken);
+                await _context.SaveChangesAsync();
+
+                // Return a success response with the token
+                return new Response<LoginResponseDto>
+                {
+                    Success = true,
+                    Data = loginResponseDto,
+                    Message = "User logged in successfully!"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
                 return new Response<LoginResponseDto>
                 {
                     Success = false,
-                    Message = "Invalid credentials."
+                    Message = ex.Message
                 };
             }
-
-            // Verify the password
-            if (!BCrypt.Net.BCrypt.Verify(loginRequestDto.Password, user.Password))
-            {
-                // Password doesn't match, return an error response
-                return new Response<LoginResponseDto>
-                {
-                    Success = false,
-                    Message = "Invalid credentials."
-                };
-            }
-
-            // Password is correct, generate a token
-            var tokenUtils = new TokenUtils(_configuration["JWT:SecretKey"] ?? string.Empty);
-            var loginResponseDto = new LoginResponseDto
-            {
-                Token = tokenUtils.GenerateToken(user)
-            };
-
-            // Return a success response with the token
-            return new Response<LoginResponseDto>
-            {
-                Success = true,
-                Data = loginResponseDto,
-                Message = "User logged in successfully!"
-            };
         }
 
         public bool GetUserByEmail(string email)
@@ -231,5 +266,70 @@ namespace AuthFilterProj.Service
             }
             return true;
         }
+
+
+        public async Task<Response<LoginResponseDto>> RefreshTokenAsync(string refreshToken)
+        {
+            try
+            {
+                // Find the user token associated with the provided refresh token
+                var userToken = await _context.UserTokens.FirstOrDefaultAsync(ut => ut.RefreshToken == refreshToken);
+
+                if (userToken == null)
+                {
+                    // Refresh token not found, return an error response
+                    return new Response<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = "Invalid refresh token."
+                    };
+                }
+
+                // // Verify if the refresh token has expired (you can set an expiration time for refresh tokens)
+                if (userToken.ExpirationDateTime <= DateTime.UtcNow)
+                {
+                    // Refresh token has expired, remove it from the database and return an error response
+                    _context.UserTokens.Remove(userToken);
+                    await _context.SaveChangesAsync();
+                    return new Response<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = "Refresh token has expired."
+                    };
+                }
+
+                // Generate a new access token
+                var tokenUtils = new TokenUtils(_configuration["JWT:SecretKey"] ?? string.Empty);
+                var user = await _context.Users.FindAsync(userToken.UserId);
+                var loginResponseDto = new LoginResponseDto
+                {
+                    Token = tokenUtils.GenerateToken(user ?? throw new InvalidOperationException()),
+                    RefreshToken = tokenUtils.GenerateRefreshToken()
+                };
+
+                // Update the user's token with the new refresh token
+                userToken.RefreshToken = loginResponseDto.RefreshToken;
+                _context.UserTokens.Update(userToken);
+                await _context.SaveChangesAsync();
+
+                // Return a success response with the new access token and refresh token
+                return new Response<LoginResponseDto>
+                {
+                    Success = true,
+                    Data = loginResponseDto,
+                    Message = "Token refreshed successfully!"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new Response<LoginResponseDto>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+        }
+
     }
 }

@@ -7,6 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+// Load the timezone from configuration
+var timeZone = builder.Configuration["TimeZone"];
+TimeZoneInfo lagosTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZone ?? string.Empty);
+
+
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
