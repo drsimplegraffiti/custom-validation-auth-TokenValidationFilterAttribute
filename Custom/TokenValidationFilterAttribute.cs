@@ -1,0 +1,113 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using AuthFilterProj.Dtos;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IdentityModel.Tokens;
+
+namespace AuthFilterProj.Custom
+{
+    public class TokenValidationFilterAttribute : Attribute, IActionFilter
+    {
+        //logger
+        private readonly ILogger<TokenValidationFilterAttribute> _logger;
+        private readonly IConfiguration _configuration;
+
+        public TokenValidationFilterAttribute(ILogger<TokenValidationFilterAttribute> logger, IConfiguration configuration)
+        {
+            _logger = logger;
+            _configuration = configuration;
+        }
+
+        public void OnActionExecuted(ActionExecutedContext context)
+        {
+            _logger.LogInformation("OnActionExecuted==================== In action filter for jwt token validation");
+        }
+
+        public void OnActionExecuting(ActionExecutingContext context)
+        {
+            var skipTokenValidation = context
+                .ActionDescriptor?
+                .EndpointMetadata
+                .Any(em => em is SkipTokenValidationAttribute) == true;
+
+            if (skipTokenValidation)
+            {
+                _logger.LogInformation("OnActionExecuting==================== Skip token validation");
+                return; // Skip token validation if the custom attribute is present
+            }
+
+            var authHeader = context.HttpContext.Request.Headers["Authorization"].ToString();
+
+            if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                context.Result = new ObjectResult(new ErrorResponse
+                {
+                    Message = "Missing token, Please provide a valid token",
+                    Error = "Unauthorized",
+                    Description = "Missing token, Please provide a valid token",
+                    Success = false
+
+                })
+                {
+                    StatusCode = 401
+                };
+                return;
+            }
+
+            var token = authHeader.Substring("Bearer ".Length);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? string.Empty);
+
+            try
+            {
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false, // Set to true if you want to validate the issuer
+                    ValidateAudience = false, // Set to true if you want to validate the audience
+                    ValidateLifetime = true // Set to true if you want to validate token expiration
+                };
+
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
+                context.HttpContext.User = principal;
+            }
+            catch (ArgumentException ex)
+            {
+                // context.Result = new UnauthorizedResult();
+                context.Result = new ObjectResult(new ErrorResponse
+                {
+                    Message = "Invalid token format",
+                    Error = "Unauthorized",
+                    Description = ex.Message, // Include the exception message in the description
+                    Success = false
+
+                })
+                {
+                    StatusCode = 401
+                };
+            }
+            catch (SecurityTokenException)
+            {
+                // context.Result = new UnauthorizedResult();
+                context.Result = new ObjectResult(new ErrorResponse
+                {
+                    Message = "Unauthorized",
+                    Success = false,
+                    Error = "Unauthorized",
+                    Description = "Unauthorized"
+                })
+                {
+                    StatusCode = 401
+                };
+            }
+        }
+    }
+}
+
+
+[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+public sealed class SkipTokenValidationAttribute : Attribute
+{
+}
