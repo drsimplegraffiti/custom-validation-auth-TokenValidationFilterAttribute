@@ -12,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 var timeZone = builder.Configuration["TimeZone"];
 TimeZoneInfo lagosTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZone ?? string.Empty);
 
+//add accessor
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
@@ -19,6 +21,7 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<TokenValidationFilterAttribute>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
@@ -56,7 +59,10 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
+
 app.UseAuthorization();
+
+
 
 
 // Apply pending migrations during startup

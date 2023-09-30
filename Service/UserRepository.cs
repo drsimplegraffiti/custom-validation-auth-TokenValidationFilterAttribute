@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using AuthFilterProj.Data;
 using AuthFilterProj.Dtos;
 using AuthFilterProj.Interface;
@@ -6,6 +8,7 @@ using AuthFilterProj.Models;
 using AuthFilterProj.Templates;
 using AuthFilterProj.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AuthFilterProj.Service
 {
@@ -17,12 +20,16 @@ namespace AuthFilterProj.Service
 
         private readonly ILogger<UserRepository> _logger;
 
-        public UserRepository(DataContext context, IConfiguration configuration, ILogger<UserRepository> logger, IEmailService emailService)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+
+        public UserRepository(DataContext context, IConfiguration configuration, ILogger<UserRepository> logger, IEmailService emailService, IHttpContextAccessor httpContextAccessor = null)
         {
             _context = context;
             _configuration = configuration;
             _logger = logger;
             _emailService = emailService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<Response<ReadUserDto>> CreateUserAsync(CreateUserDto createUserDto)
@@ -49,7 +56,8 @@ namespace AuthFilterProj.Service
             await _context.SaveChangesAsync();
 
             //otp
-            var otp = new Otp{
+            var otp = new Otp
+            {
                 Email = user.Email,
                 OtpCode = new Random().Next(1000, 9999).ToString(),
                 ExpirationDateTime = DateTime.Now.AddMinutes(5)
@@ -57,7 +65,7 @@ namespace AuthFilterProj.Service
 
             await _context.Otps.AddAsync(otp);
             await _context.SaveChangesAsync();
-            
+
 
 
             var readUserDto = new ReadUserDto
@@ -75,9 +83,9 @@ namespace AuthFilterProj.Service
 
             _logger.LogInformation("User created successfully!");
 
-        string emailContent = EmailTemplates.GetVerificationEmail(user.Name, otp.OtpCode);
-         _emailService.Send(user.Email, "Verify your email", emailContent);
-            
+            string emailContent = EmailTemplates.GetVerificationEmail(user.Name, otp.OtpCode);
+            _emailService.Send(user.Email, "Verify your email", emailContent);
+
 
             return response;
         }
@@ -429,7 +437,7 @@ namespace AuthFilterProj.Service
 
             //check if otp exists
             var otp = _context.Otps.FirstOrDefault(o => o.Email == resendOtpDto.Email);
-           // return Error
+            // return Error
             if (otp != null)
             {
                 return Task.FromResult(new Response<string>
@@ -547,5 +555,7 @@ namespace AuthFilterProj.Service
                 Message = "Password reset successfully."
             });
         }
+
+       
     }
 }

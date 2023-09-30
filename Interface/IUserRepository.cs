@@ -19,7 +19,11 @@ namespace AuthFilterProj.Interface
 
         Task<Response<string>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
         Task<Response<string>> ResetPasswordAsync(ResetPasswordDto resetPasswordDto);
+
+
+
+
     }
 
- 
+
 }
