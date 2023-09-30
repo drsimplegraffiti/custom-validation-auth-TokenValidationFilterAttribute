@@ -521,3 +521,6 @@ app.Run();
 
 ##### Install MailKit
 - dotnet add package MailKit --version 2.15.0
+
+#### CloudinaryDotNet
+- dotnet add package CloudinaryDotNet --version 1.13.1

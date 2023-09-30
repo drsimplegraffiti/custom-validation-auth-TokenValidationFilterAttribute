@@ -1,5 +1,6 @@
 
 using AuthFilterProj.Dtos;
+using AuthFilterProj.Models;
 
 namespace AuthFilterProj.Interface
 {
@@ -19,10 +20,9 @@ namespace AuthFilterProj.Interface
 
         Task<Response<string>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
         Task<Response<string>> ResetPasswordAsync(ResetPasswordDto resetPasswordDto);
+        User GetUserById(int id);
 
-
-
-
+         Task<Response<string>> UploadProfilePicture(IFormFile file);
     }
 
 

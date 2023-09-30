@@ -11,11 +11,13 @@ namespace AuthFilterProj.Controllers
     public class AuthControlller : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IApartmentRepository _apartmentRepository;
         private readonly ILogger<IUserRepository> _logger;
-        public AuthControlller(IUserRepository userRepository, ILogger<IUserRepository> logger)
+        public AuthControlller(IUserRepository userRepository, ILogger<IUserRepository> logger, IApartmentRepository apartmentRepository)
         {
             _userRepository = userRepository;
             _logger = logger;
+            _apartmentRepository = apartmentRepository;
         }
 
         [HttpPost("login")]
@@ -48,6 +50,8 @@ namespace AuthFilterProj.Controllers
 
             return BadRequest(response.Message);
         }
+
+      
 
     }
 

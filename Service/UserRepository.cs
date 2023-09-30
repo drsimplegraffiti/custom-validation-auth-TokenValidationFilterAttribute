@@ -7,6 +7,8 @@ using AuthFilterProj.Interface;
 using AuthFilterProj.Models;
 using AuthFilterProj.Templates;
 using AuthFilterProj.Utils;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -14,6 +16,7 @@ namespace AuthFilterProj.Service
 {
     public class UserRepository : IUserRepository
     {
+        private readonly Cloudinary _cloudinary;
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
@@ -23,13 +26,20 @@ namespace AuthFilterProj.Service
         private readonly IHttpContextAccessor _httpContextAccessor;
 
 
-        public UserRepository(DataContext context, IConfiguration configuration, ILogger<UserRepository> logger, IEmailService emailService, IHttpContextAccessor httpContextAccessor = null)
+        public UserRepository(
+            DataContext context,
+            IConfiguration configuration,
+            ILogger<UserRepository> logger,
+            IEmailService emailService,
+            IHttpContextAccessor httpContextAccessor = null!,
+            Cloudinary cloudinary = null!)
         {
             _context = context;
             _configuration = configuration;
             _logger = logger;
             _emailService = emailService;
             _httpContextAccessor = httpContextAccessor;
+            _cloudinary = CloudinaryHelper.CreateCloudinaryInstance(_configuration);
         }
 
         public async Task<Response<ReadUserDto>> CreateUserAsync(CreateUserDto createUserDto)
@@ -556,6 +566,88 @@ namespace AuthFilterProj.Service
             });
         }
 
-       
+        public User GetUserById(int id)
+        {
+            return _context.Users.FirstOrDefault(u => u.Id == id) ?? throw new Exception("User not found");
+        }
+
+       public Task<Response<string>> UploadProfilePicture(IFormFile file)
+{
+    var principal = _httpContextAccessor.HttpContext!.User;
+    if (principal == null)
+    {
+        return Task.FromResult(new Response<string>
+        {
+            Success = false,
+            Message = "User not found"
+        });
+    }
+
+    var userIdClaim = principal.Identity!.Name;
+
+    if (string.IsNullOrEmpty(userIdClaim))
+    {
+        return Task.FromResult(new Response<string>
+        {
+            Success = false,
+            Message = "User not found"
+        });
+    }
+
+    var user = GetUserById(int.Parse(userIdClaim));
+    if (user == null)
+    {
+        return Task.FromResult(new Response<string>
+        {
+            Success = false,
+            Message = "User not found"
+        });
+    }
+    _logger.LogInformation($"User: {user.Id}");
+
+    var uploadResult = new ImageUploadResult();
+
+    // Check if the user has an existing profile picture
+    if (!string.IsNullOrEmpty(user.PublicId))
+    {
+        // Delete the existing image from Cloudinary
+        var deleteParams = new DeletionParams(user.PublicId);
+        var deletionResult = _cloudinary.Destroy(deleteParams);
+        if (deletionResult.Result == "ok")
+        {
+            _logger.LogInformation($"Deleted old image with PublicId: {user.PublicId}");
+        }
+        else
+        {
+            _logger.LogError($"Failed to delete old image with PublicId: {user.PublicId}");
+        }
+    }
+
+    if (file.Length > 0)
+    {
+        using var stream = file.OpenReadStream();
+        var uploadParams = new ImageUploadParams
+        {
+            File = new FileDescription(file.FileName, stream),
+            Transformation = new Transformation().Width(500).Height(500).Crop("fill")
+        };
+        uploadResult = _cloudinary.Upload(uploadParams);
+    }
+
+    user.UpdatedAt = DateTime.Now;
+    user.PublicId = uploadResult.PublicId;
+    user.ProfilePicture = uploadResult.Url.ToString();
+    _context.Users.Update(user);
+    _context.SaveChanges();
+
+    return Task.FromResult(new Response<string>
+    {
+        Success = true,
+        Message = "Profile picture updated successfully",
+        Data = uploadResult.Url.ToString()
+    });
+}
+
+
     }
 }

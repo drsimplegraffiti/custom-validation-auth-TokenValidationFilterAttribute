@@ -148,5 +148,21 @@ namespace AuthFilterProj.Controllers
 
             return Ok(response);
         }
+
+
+        [HttpPost("upload-profile-picture")]
+        public async Task<IActionResult> UploadProfilePicture([FromForm] IFormFile file)
+        {
+            var response = await _userRepository.UploadProfilePicture(file);
+
+            if(response == null)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+
+     
+    }
     }
 }
