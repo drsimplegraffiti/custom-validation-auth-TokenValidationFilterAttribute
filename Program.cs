@@ -54,6 +54,14 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+
+// Apply pending migrations during startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+    dbContext.Database.Migrate();
+}
+
 app.MapControllers();
 
 app.Run();

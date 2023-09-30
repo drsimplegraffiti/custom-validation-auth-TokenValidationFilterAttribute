@@ -48,25 +48,25 @@ public class TokenUtils
         }
         
 
-         public ClaimsPrincipal GetPrincipalFromToken(string token)
-        {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecretKey)),
-                ValidateLifetime = false
-            };
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-            //principal
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token passed");
-            return principal;
-        }
+        //  public ClaimsPrincipal GetPrincipalFromToken(string token)
+        // {
+        //     var tokenValidationParameters = new TokenValidationParameters
+        //     {
+        //         ValidateAudience = false,
+        //         ValidateIssuer = false,
+        //         ValidateIssuerSigningKey = true,
+        //         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecretKey)),
+        //         ValidateLifetime = false
+        //     };
+        //     var tokenHandler = new JwtSecurityTokenHandler();
+        //     SecurityToken securityToken;
+        //     //principal
+        //     var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+        //     var jwtSecurityToken = securityToken as JwtSecurityToken;
+        //     if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+        //         throw new SecurityTokenException("Invalid token passed");
+        //     return principal;
+        // }
 
      
 

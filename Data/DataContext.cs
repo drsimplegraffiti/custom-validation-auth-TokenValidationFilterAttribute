@@ -12,6 +12,8 @@ namespace AuthFilterProj.Data
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
         public DbSet<User> Users { get; set; }
         public DbSet<UserToken> UserTokens { get; set; }
-        
+
+        public DbSet<Otp> Otps { get; set; }
+
     }
 }

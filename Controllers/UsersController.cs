@@ -92,5 +92,32 @@ namespace AuthFilterProj.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("verify-otp")]
+         [SkipTokenValidation]
+        public async Task<IActionResult> VerifyOtpAsync(VerifyOtpDto verifyOtpDto)
+        {
+            var response = await _userRepository.VerifyOtpAsync(verifyOtpDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPost("resend-otp")]
+        public async Task<IActionResult> ResendOtpAsync(ResendOtpDto resendOtpDto)
+        {
+            var response = await _userRepository.ResendOtpAsync(resendOtpDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }

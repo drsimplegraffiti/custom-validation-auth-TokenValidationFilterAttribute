@@ -45,6 +45,17 @@ namespace AuthFilterProj.Service
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
+            //otp
+            var otp = new Otp{
+                Email = user.Email,
+                OtpCode = new Random().Next(1000, 9999).ToString(),
+                ExpirationDateTime = DateTime.Now.AddMinutes(5)
+            };
+
+            await _context.Otps.AddAsync(otp);
+            await _context.SaveChangesAsync();
+            
+
 
             var readUserDto = new ReadUserDto
             {
@@ -198,6 +209,17 @@ namespace AuthFilterProj.Service
                     };
                 }
 
+                // Check if the user's email is verified
+                if (!user.IsVerified!.Value)
+                {
+                    // User's email is not verified, return an error response
+                    return new Response<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = "Email not verified."
+                    };
+                }
+
                 // Verify the password
                 if (!BCrypt.Net.BCrypt.Verify(loginRequestDto.Password, user.Password))
                 {
@@ -331,5 +353,107 @@ namespace AuthFilterProj.Service
             }
         }
 
+        public Task<Response<string>> VerifyOtpAsync(VerifyOtpDto verifyOtpDto)
+        {
+            //check if email exists
+            var user = _context.Users.FirstOrDefault(u => u.Email == verifyOtpDto.Email);
+            //return Error
+            if (user == null)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "Email not found."
+                });
+            }
+
+            //check if otp exists
+            var otp = _context.Otps.FirstOrDefault(o => o.Email == verifyOtpDto.Email && o.OtpCode == verifyOtpDto.Otp);
+            //return Error
+            if (otp == null)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "Invalid OTP."
+                });
+            }
+
+            //check if otp expired
+            if (otp.ExpirationDateTime < DateTime.Now)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "OTP expired."
+                });
+            }
+
+            //update user
+            user.IsVerified = true;
+            _context.Users.Update(user);
+            _context.SaveChanges();
+
+            // delete otp from db
+            _context.Otps.Remove(otp);
+            _context.SaveChanges();
+
+            //return success
+            return Task.FromResult(new Response<string>
+            {
+                Success = true,
+                Message = "OTP verified successfully."
+            });
+        }
+
+        public Task<Response<string>> ResendOtpAsync(ResendOtpDto resendOtpDto)
+        {
+            //check if email exists
+            var user = _context.Users.FirstOrDefault(u => u.Email == resendOtpDto.Email);
+            //return Error
+            if (user == null)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "Email not found."
+                });
+            }
+
+            //check if otp exists
+            var otp = _context.Otps.FirstOrDefault(o => o.Email == resendOtpDto.Email);
+            //return Error
+            if (otp == null)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "Invalid OTP."
+                });
+            }
+
+            //check if otp expired
+            if (otp.ExpirationDateTime > DateTime.Now)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "OTP expired."
+                });
+            }
+
+            //generate new otp
+            otp.OtpCode = new Random().Next(1000, 9999).ToString();
+            otp.ExpirationDateTime = DateTime.Now.AddMinutes(5);
+            _context.Otps.Update(otp);
+            _context.SaveChanges();
+
+            //return success
+            return Task.FromResult(new Response<string>
+            {
+                Success = true,
+                Message = "OTP sent successfully."
+            });
+        }
     }
 }

@@ -71,7 +71,7 @@ namespace AuthFilterProj.Custom
                 };
 
                 var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
-                context.HttpContext.User = principal;
+                context.HttpContext.User = principal; // this is like req.user in Express.js
             }
             catch (ArgumentException ex)
             {
