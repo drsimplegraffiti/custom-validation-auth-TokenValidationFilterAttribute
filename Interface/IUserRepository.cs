@@ -15,6 +15,9 @@ namespace AuthFilterProj.Interface
     Task<Response<IEnumerable<ReadUserDto>>> GetUsersAsync();
     Task<Response<LoginResponseDto>> LoginAsync(LoginDto loginRequestDto); // Add this method
 
+    // get user by email
+   bool GetUserByEmail(string email);
+
 
     }
 

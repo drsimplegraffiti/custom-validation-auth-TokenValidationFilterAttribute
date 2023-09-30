@@ -101,6 +101,20 @@ namespace AuthFilterProj.Custom
                 {
                     StatusCode = 401
                 };
+            } 
+            catch (Exception ex) // capture the exception thrown when decoding an invalid token
+            {
+                // context.Result = new UnauthorizedResult();
+                context.Result = new ObjectResult(new ErrorResponse
+                {
+                    Message = "Unauthorized",
+                    Success = false,
+                    Error = "Unauthorized",
+                    Description = ex.Message
+                })
+                {
+                    StatusCode = 401
+                };
             }
         }
     }

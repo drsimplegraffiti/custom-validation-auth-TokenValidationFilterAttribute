@@ -23,6 +23,17 @@ namespace AuthFilterProj.Service
 
         public async Task<Response<ReadUserDto>> CreateUserAsync(CreateUserDto createUserDto)
         {
+            // Check if the email is already registered
+            var userExists = GetUserByEmail(createUserDto.Email);
+            if (userExists)
+            {
+                return new Response<ReadUserDto>
+                {
+                    Success = false,
+                    Message = "Email already registered."
+                };
+            }
+
             var user = new User
             {
                 Name = createUserDto.Name,
@@ -211,6 +222,14 @@ namespace AuthFilterProj.Service
             };
         }
 
-
+        public bool GetUserByEmail(string email)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Email == email);
+            if (user == null)
+            {
+                return false;
+            }
+            return true;
+        }
     }
 }

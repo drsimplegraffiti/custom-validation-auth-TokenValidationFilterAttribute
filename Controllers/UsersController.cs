@@ -21,7 +21,7 @@ namespace AuthFilterProj.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
+        [HttpPost("Register")]
         [SkipTokenValidation] // Skip token validation for this action
 
         public async Task<IActionResult> CreateUserAsync(CreateUserDto createUserDto)
