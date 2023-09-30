@@ -460,12 +460,92 @@ namespace AuthFilterProj.Service
 
         public Task<Response<string>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
         {
-            throw new NotImplementedException();
+            // check if email exists
+            var user = _context.Users.FirstOrDefault(u => u.Email == forgotPasswordDto.Email);
+            // return Error
+            if (user == null)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "Email not found."
+                });
+            }
+
+            // otp
+            var otp = new Otp
+            {
+                Email = user.Email,
+                OtpCode = new Random().Next(1000, 9999).ToString(),
+                ExpirationDateTime = DateTime.Now.AddMinutes(5)
+            };
+
+            _context.Otps.Add(otp);
+            _context.SaveChanges();
+
+            // send email
+            string emailContent = EmailTemplates.GetForgotPasswordEmail(user.Name, otp.OtpCode);
+            _emailService.Send(user.Email, "Reset your password", emailContent);
+
+            // return success
+            return Task.FromResult(new Response<string>
+            {
+                Success = true,
+                Message = "OTP sent successfully."
+            });
         }
 
         public Task<Response<string>> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
         {
-            throw new NotImplementedException();
+            // check if email exists
+            var user = _context.Users.FirstOrDefault(u => u.Email == resetPasswordDto.Email);
+            // return Error
+            if (user == null)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "Email not found."
+                });
+            }
+
+            // check if otp exists
+            var otp = _context.Otps.FirstOrDefault(o => o.Email == resetPasswordDto.Email && o.OtpCode == resetPasswordDto.Otp);
+            // return Error
+            if (otp == null)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "Invalid OTP."
+                });
+            }
+
+            // check if otp expired
+            if (otp.ExpirationDateTime < DateTime.Now)
+            {
+                return Task.FromResult(new Response<string>
+                {
+                    Success = false,
+                    Message = "OTP expired."
+                });
+            }
+
+            // update user
+            user.Password = BCrypt.Net.BCrypt.HashPassword(resetPasswordDto.Password);
+            _context.Users.Update(user);
+            _context.SaveChanges();
+
+            // delete otp from db
+            _context.Otps.Remove(otp);
+            _context.SaveChanges();
+
+            // return success
+            return Task.FromResult(new Response<string>
+            {
+                Success = true,
+                Message = "Password reset successfully."
+            });
         }
     }
 }

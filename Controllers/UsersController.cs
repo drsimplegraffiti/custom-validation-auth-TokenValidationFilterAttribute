@@ -120,5 +120,33 @@ namespace AuthFilterProj.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("forgot-password")]
+         [SkipTokenValidation]
+        public async Task<IActionResult> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
+        {
+            var response = await _userRepository.ForgotPasswordAsync(forgotPasswordDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPost("reset-password")]
+         [SkipTokenValidation]
+        public async Task<IActionResult> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+        {
+            var response = await _userRepository.ResetPasswordAsync(resetPasswordDto);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
     }
 }
