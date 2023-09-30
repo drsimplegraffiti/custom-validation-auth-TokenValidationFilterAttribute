@@ -108,6 +108,7 @@ namespace AuthFilterProj.Controllers
         }
 
         [HttpPost("resend-otp")]
+         [SkipTokenValidation]
         public async Task<IActionResult> ResendOtpAsync(ResendOtpDto resendOtpDto)
         {
             var response = await _userRepository.ResendOtpAsync(resendOtpDto);

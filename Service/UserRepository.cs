@@ -422,30 +422,25 @@ namespace AuthFilterProj.Service
 
             //check if otp exists
             var otp = _context.Otps.FirstOrDefault(o => o.Email == resendOtpDto.Email);
-            //return Error
-            if (otp == null)
+           // return Error
+            if (otp != null)
             {
                 return Task.FromResult(new Response<string>
                 {
                     Success = false,
-                    Message = "Invalid OTP."
+                    Message = "OTP already sent."
                 });
             }
 
-            //check if otp expired
-            if (otp.ExpirationDateTime > DateTime.Now)
+            //otp
+            var newOtp = new Otp
             {
-                return Task.FromResult(new Response<string>
-                {
-                    Success = false,
-                    Message = "OTP expired."
-                });
-            }
+                Email = user.Email,
+                OtpCode = new Random().Next(1000, 9999).ToString(),
+                ExpirationDateTime = DateTime.Now.AddMinutes(5)
+            };
 
-            //generate new otp
-            otp.OtpCode = new Random().Next(1000, 9999).ToString();
-            otp.ExpirationDateTime = DateTime.Now.AddMinutes(5);
-            _context.Otps.Update(otp);
+            _context.Otps.Add(newOtp);
             _context.SaveChanges();
 
             //return success
