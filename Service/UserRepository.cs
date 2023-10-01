@@ -332,7 +332,23 @@ namespace AuthFilterProj.Service
                 await _context.UserTokens.AddAsync(userToken);
                 await _context.SaveChangesAsync();
 
+                // add token to response cookie
+                _httpContextAccessor.HttpContext!.Response.Cookies.Append("token", loginResponseDto.Token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(7)
+                });
 
+                // add refresh token to response cookie
+                _httpContextAccessor.HttpContext!.Response.Cookies.Append("refreshToken", loginResponseDto.RefreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(7)
+                });
 
                 // Return a success response with the token
                 return new Response<LoginResponseDto>

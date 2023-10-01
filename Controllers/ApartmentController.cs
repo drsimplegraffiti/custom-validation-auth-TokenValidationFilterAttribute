@@ -51,7 +51,7 @@ namespace AuthFilterProj.Controllers
         }
 
         [HttpPost("upload-images/multiple")]
-        public async Task<ActionResult<List<string>>> UploadApartmentImages(List<IFormFile> files)
+        public async Task<ActionResult<List<string>>> UploadApartmentImages(List<IFormFile> files) // or IFormFileCollection files
         {
             var response = await _apartmentRepository.UploadApartmentImages(files);
             if (response.Success)
