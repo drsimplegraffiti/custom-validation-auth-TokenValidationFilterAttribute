@@ -22,6 +22,7 @@ builder.Services.AddDbContext<DataContext>(options =>
 builder.Services.AddScoped<TokenValidationFilterAttribute>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 

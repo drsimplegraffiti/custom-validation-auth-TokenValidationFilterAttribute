@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AuthFilterProj.Dtos;
 using AuthFilterProj.Dtos.Apartment;
+using AuthFilterProj.Models;
 
 namespace AuthFilterProj.Interface
 {
@@ -16,6 +17,9 @@ namespace AuthFilterProj.Interface
 
         // upload apartment images (multiple)
             Task<Response<List<string>>> UploadApartmentImages(List<IFormFile> files);
+
+        //GetApartmentByIdAsync
+        Task<Apartment> GetApartmentByIdAsync(int id);
 
      
 }

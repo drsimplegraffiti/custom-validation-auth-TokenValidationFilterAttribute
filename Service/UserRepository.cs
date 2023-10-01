@@ -295,15 +295,17 @@ namespace AuthFilterProj.Service
                 var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"].ToString();
                 _logger.LogInformation($"userAgent: {userAgent}");
 
-                user.IpAddress = ipAddress;
-                user.UserAgent = userAgent;
-
-                // send email if user logs in from a new device
-                if (user.UserAgent != userAgent)
+                   // send email if user logs in from a new device
+                if (user.UserAgent != userAgent || user.IpAddress != ipAddress)
                 {
                     string emailContent = EmailTemplates.GetNewDeviceLoginEmail(user.Name, user.IpAddress, user.UserAgent);
                     _emailService.Send(user.Email, "New device login", emailContent);
                 }
+
+                user.IpAddress = ipAddress;
+                user.UserAgent = userAgent;
+
+             
 
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();

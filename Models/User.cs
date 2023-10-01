@@ -21,6 +21,9 @@ namespace AuthFilterProj.Models
         public string Role { get; set; } = "User";
         [JsonIgnore]
         public List<Apartment> Apartments { get; set; } = new List<Apartment>();
+
+        [JsonIgnore]
+        public List<Booking> Bookings { get; set; } = new List<Booking>();
         public User()
         {
             Role = "User";

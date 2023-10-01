@@ -16,7 +16,9 @@ namespace AuthFilterProj.Data
         public DbSet<Otp> Otps { get; set; }
 
         public DbSet<Apartment> Apartments { get; set; }
-        public object? HttpContext { get; internal set; }
+
+        public DbSet<Booking> Bookings { get; set; }
+        // public object? HttpContext { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,9 +45,18 @@ namespace AuthFilterProj.Data
                 .WithMany(u => u.Apartments) // Specify the navigation property on the User entity
                 .HasForeignKey(a => a.UserId);
 
+ modelBuilder.Entity<Booking>()
+        .HasOne(b => b.User)
+        .WithMany(u => u.Bookings)
+        .HasForeignKey(b => b.UserId)
+        .OnDelete(DeleteBehavior.Restrict); // Specify ON DELETE NO ACTION
+
+    
 
 
-        base.OnModelCreating(modelBuilder);
+
+
+            base.OnModelCreating(modelBuilder);
 
         }
     }

@@ -38,7 +38,9 @@ namespace AuthFilterProj.Models
         public int UserId { get; set; }
 
         [JsonIgnore]
-        public User User { get; set; } = null!;
+        public User User { get; set; } = new User();
+
+        
        
     }
 

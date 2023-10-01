@@ -126,6 +126,56 @@ namespace AuthFilterProj.Migrations
                     b.ToTable("Apartments");
                 });
 
+            modelBuilder.Entity("AuthFilterProj.Models.Booking", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CheckIn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CheckOut")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NoOfGuests")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApartmentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Bookings");
+                });
+
             modelBuilder.Entity("AuthFilterProj.Models.Otp", b =>
                 {
                     b.Property<int>("Id")
@@ -262,6 +312,25 @@ namespace AuthFilterProj.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AuthFilterProj.Models.Booking", b =>
+                {
+                    b.HasOne("AuthFilterProj.Models.Apartment", "Apartment")
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AuthFilterProj.Models.User", "User")
+                        .WithMany("Bookings")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Apartment");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AuthFilterProj.Models.UserToken", b =>
                 {
                     b.HasOne("AuthFilterProj.Models.User", "User")
@@ -276,6 +345,8 @@ namespace AuthFilterProj.Migrations
             modelBuilder.Entity("AuthFilterProj.Models.User", b =>
                 {
                     b.Navigation("Apartments");
+
+                    b.Navigation("Bookings");
                 });
 #pragma warning restore 612, 618
         }

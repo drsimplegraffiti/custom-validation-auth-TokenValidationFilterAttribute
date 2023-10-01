@@ -265,5 +265,15 @@ public async Task<Response<List<string>>> UploadApartmentImages(List<IFormFile> 
     };
 }
 
+        public async Task<Apartment> GetApartmentByIdAsync(int id)
+        {
+            var apartment = await _context.Apartments.FindAsync(id);
+            if (apartment == null)
+            {
+                throw new Exception("Apartment not found");
+            }
+
+            return apartment;
+        }
     }
 }
