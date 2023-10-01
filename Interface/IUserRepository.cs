@@ -23,6 +23,7 @@ namespace AuthFilterProj.Interface
         User GetUserById(int id);
 
          Task<Response<string>> UploadProfilePicture(IFormFile file);
+         
     }
 
 

@@ -524,3 +524,7 @@ app.Run();
 
 #### CloudinaryDotNet
 - dotnet add package CloudinaryDotNet --version 1.13.1
+
+
+##### Multiple pictures
+![Alt text](image.png)

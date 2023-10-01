@@ -12,6 +12,10 @@ namespace AuthFilterProj.Models
         public bool? IsVerified { get; set; } = false;
         public string PublicId { get; set; } = string.Empty;
         public string ProfilePicture { get; set; } = string.Empty;
+        public string IpAddress { get; set; } = string.Empty;
+
+        public int NoOfLoginTries { get; set; } = 0;
+        public bool IsLocked { get; set; } = false;
         public string Role { get; set; } = "User";
         [JsonIgnore]
         public List<Apartment> Apartments { get; set; } = new List<Apartment>();

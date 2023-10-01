@@ -33,9 +33,17 @@ namespace AuthFilterProj.Data
                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
 
             modelBuilder.Entity<Apartment>()
+                .Property(b => b.ApartmentImages)
+                .HasConversion(
+                    v => string.Join(',', v),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+
+            modelBuilder.Entity<Apartment>()
                 .HasOne(a => a.User)  // Fix the typo here
                 .WithMany(u => u.Apartments) // Specify the navigation property on the User entity
                 .HasForeignKey(a => a.UserId);
+
+
 
         base.OnModelCreating(modelBuilder);
 
