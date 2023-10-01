@@ -18,7 +18,7 @@ namespace AuthFilterProj.Data
         public DbSet<Apartment> Apartments { get; set; }
 
         public DbSet<Booking> Bookings { get; set; }
-        // public object? HttpContext { get; internal set; }
+        public object? HttpContext { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,32 +26,36 @@ namespace AuthFilterProj.Data
                 .Property(b => b.Amenities)
                 .HasConversion(
                     v => string.Join(',', v),
-                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
+                .IsRequired(false);
 
             modelBuilder.Entity<Apartment>()
                 .Property(b => b.Rules)
                 .HasConversion(
                     v => string.Join(',', v),
-                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
+                .IsRequired(false);
 
             modelBuilder.Entity<Apartment>()
                 .Property(b => b.ApartmentImages)
                 .HasConversion(
                     v => string.Join(',', v),
-                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
+                .IsRequired(false);
 
             modelBuilder.Entity<Apartment>()
                 .HasOne(a => a.User)  // Fix the typo here
                 .WithMany(u => u.Apartments) // Specify the navigation property on the User entity
-                .HasForeignKey(a => a.UserId);
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Specify ON DELETE NO ACTION
 
- modelBuilder.Entity<Booking>()
-        .HasOne(b => b.User)
-        .WithMany(u => u.Bookings)
-        .HasForeignKey(b => b.UserId)
-        .OnDelete(DeleteBehavior.Restrict); // Specify ON DELETE NO ACTION
+            modelBuilder.Entity<Booking>()
+                   .HasOne(b => b.User)
+                   .WithMany(u => u.Bookings)
+                   .HasForeignKey(b => b.UserId)
+                   .OnDelete(DeleteBehavior.Restrict); // Specify ON DELETE NO ACTION
 
-    
+
 
 
 

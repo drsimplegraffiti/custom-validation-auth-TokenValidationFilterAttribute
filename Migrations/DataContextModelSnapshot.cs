@@ -35,11 +35,9 @@ namespace AuthFilterProj.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Amenities")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ApartmentImages")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("City")
@@ -82,7 +80,6 @@ namespace AuthFilterProj.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Rules")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("State")
@@ -306,7 +303,7 @@ namespace AuthFilterProj.Migrations
                     b.HasOne("AuthFilterProj.Models.User", "User")
                         .WithMany("Apartments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
