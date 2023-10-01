@@ -4,11 +4,41 @@ using AuthFilterProj.Data;
 using AuthFilterProj.Interface;
 using AuthFilterProj.Service;
 using AuthFilterProj.Utils;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Logging.AddSerilog();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("*");
+    });
+});
+
+// add rate limiting
+builder.Services.AddRateLimiter(_ => _.AddFixedWindowLimiter(policyName: "fixed window", options =>
+{
+    options.Window = TimeSpan.FromSeconds(10);
+    options.QueueLimit = 0;
+    options.PermitLimit = 3;
+    options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+}).RejectionStatusCode = StatusCodes.Status429TooManyRequests);
 // Load the timezone from configuration
 var timeZone = builder.Configuration["TimeZone"];
 TimeZoneInfo lagosTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZone ?? string.Empty);
@@ -20,7 +50,7 @@ builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSet
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    // Authentication for swagger
+// Authentication for swagger
 var securityScheme = new OpenApiSecurityScheme()
 {
     Name = "Authorization",
@@ -83,13 +113,17 @@ builder.Services.AddAuthentication("Bearer")
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = false,
-            ValidateAudience = false, 
+            ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = false,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? string.Empty))
         };
+    }).AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Google:ClientId"] ?? string.Empty;
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? string.Empty;
     });
 
 
@@ -104,6 +138,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+app.UseRateLimiter();
+app.UseCors("CorsPolicy");
+
 
 if (app.Environment.IsDevelopment())
 {

@@ -528,3 +528,10 @@ app.Run();
 
 ##### Multiple pictures
 ![Alt text](image.png)
+
+#### install
+  <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+
+dotnet add package Serilog.AspNetCore
+dotnet add package Serilog.Sinks.File
