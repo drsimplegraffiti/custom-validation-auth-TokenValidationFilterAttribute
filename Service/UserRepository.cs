@@ -245,9 +245,24 @@ namespace AuthFilterProj.Service
                     };
                 }
 
+                  if (user.NoOfLoginTries >= 3)
+                {
+                    // User's email is not verified, return an error response
+                    return new Response<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = "Account locked, contact admin."
+                    };
+                }
+
                 // Verify the password
                 if (!BCrypt.Net.BCrypt.Verify(loginRequestDto.Password, user.Password))
                 {
+                    // update the number of failed login attempts
+                    user.NoOfLoginTries += 1;
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                    
                     // Password doesn't match, return an error response
                     return new Response<LoginResponseDto>
                     {
@@ -256,6 +271,14 @@ namespace AuthFilterProj.Service
                     };
                 }
 
+                // reset the number of failed login attempts
+                user.NoOfLoginTries = 0;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+
+              
+
                 // Password is correct, generate a token
                 var tokenUtils = new TokenUtils(_configuration["JWT:SecretKey"] ?? string.Empty);
                 var loginResponseDto = new LoginResponseDto
@@ -263,6 +286,27 @@ namespace AuthFilterProj.Service
                     Token = tokenUtils.GenerateToken(user),
                     RefreshToken = tokenUtils.GenerateRefreshToken()
                 };
+
+                // get ip address of user
+                var ipAddress = _httpContextAccessor.HttpContext!.Connection.RemoteIpAddress!.ToString();
+                _logger.LogInformation($"ipAddress: {ipAddress}");
+
+                // get user agent
+                var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"].ToString();
+                _logger.LogInformation($"userAgent: {userAgent}");
+
+                user.IpAddress = ipAddress;
+                user.UserAgent = userAgent;
+
+                // send email if user logs in from a new device
+                if (user.UserAgent != userAgent)
+                {
+                    string emailContent = EmailTemplates.GetNewDeviceLoginEmail(user.Name, user.IpAddress, user.UserAgent);
+                    _emailService.Send(user.Email, "New device login", emailContent);
+                }
+
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
 
                 // remove old refresh token and token
                 var OldserToken = await _context.UserTokens.FirstOrDefaultAsync(u => u.UserId == user.Id);
@@ -282,8 +326,11 @@ namespace AuthFilterProj.Service
                     UserId = user.Id
                 };
 
+
                 await _context.UserTokens.AddAsync(userToken);
                 await _context.SaveChangesAsync();
+
+
 
                 // Return a success response with the token
                 return new Response<LoginResponseDto>
