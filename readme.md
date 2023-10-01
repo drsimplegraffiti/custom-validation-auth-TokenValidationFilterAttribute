@@ -529,9 +529,15 @@ app.Run();
 ##### Multiple pictures
 ![Alt text](image.png)
 
-#### install
-  <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+#### install goolge dotnet add package Google.Apis.Auth
+- dotnet add package Google.Apis.Auth
 
 dotnet add package Serilog.AspNetCore
 dotnet add package Serilog.Sinks.File
+
+#### fix to google issue
+https://stackoverflow.com/questions/68438293/the-given-origin-is-not-allowed-for-the-given-client-id-gsi
+
+![Alt text](image-1.png)
+
+![Alt text](image-2.png)

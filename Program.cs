@@ -23,6 +23,13 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Logging.AddSerilog();
 
+// //cookie policy
+// builder.Services.AddCookiePolicy(options =>
+// {
+//     options.CheckConsentNeeded = context => true;
+//     options.MinimumSameSitePolicy = SameSiteMode.None;
+// });
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -30,6 +37,16 @@ builder.Services.AddCors(options =>
         policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("*");
     });
 });
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("CorsPolicy", policy =>
+//     {
+//         // Specify the allowed origins for your frontend application(s)
+//         policy.WithOrigins("http://localhost:5500", "https://your-production-domain.com")
+//               .AllowAnyHeader()
+//               .AllowAnyMethod();
+//     });
+// });
 
 // add rate limiting
 builder.Services.AddRateLimiter(_ => _.AddFixedWindowLimiter(policyName: "fixed window", options =>
@@ -39,6 +56,7 @@ builder.Services.AddRateLimiter(_ => _.AddFixedWindowLimiter(policyName: "fixed 
     options.PermitLimit = 3;
     options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
 }).RejectionStatusCode = StatusCodes.Status429TooManyRequests);
+
 // Load the timezone from configuration
 var timeZone = builder.Configuration["TimeZone"];
 TimeZoneInfo lagosTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZone ?? string.Empty);
@@ -120,16 +138,12 @@ builder.Services.AddAuthentication("Bearer")
             ValidAudience = builder.Configuration["Jwt:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? string.Empty))
         };
-    }).AddGoogle(options =>
-    {
-        options.ClientId = builder.Configuration["Google:ClientId"] ?? string.Empty;
-        options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? string.Empty;
-    });
+    })
+    .AddCookie();
 
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-// builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", info);
@@ -139,8 +153,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-app.UseRateLimiter();
 app.UseCors("CorsPolicy");
+app.UseRateLimiter();
 
 
 if (app.Environment.IsDevelopment())
@@ -155,8 +169,6 @@ app.UseAuthentication();
 
 
 app.UseAuthorization();
-
-
 
 
 // Apply pending migrations during startup
