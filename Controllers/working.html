@@ -1,0 +1,43 @@
+<!-- <html>
+  <body>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+      function handleCredentialResponse(response) {
+        console.log("Encoded JWT ID token: " + response.credential);
+        console.log(response);
+        // backend verify token http://localhost:5139/api/Google/signin-google?token=encodedJWTIDToken
+        // send token to backend response.credential
+        axios
+          .post(
+            "http://localhost:5139/api/Google/signin-google?token=" +
+              response.credential
+          )
+          .then((res) => {
+            console.log(res);
+            console.log(res.data);
+            return res.data;
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+       
+      }
+      window.onload = function () {
+        google.accounts.id.initialize({
+          client_id:
+            "569311585811-7sc7pvot7md4n4dcsu67uoi2kjsaa4jn.apps.googleusercontent.com",
+          callback: handleCredentialResponse,
+        });
+        google.accounts.id.renderButton(
+          document.getElementById("buttonDiv"),
+          { theme: "outline", size: "large" } // customization attributes
+        );
+        google.accounts.id.prompt(); // also display the One Tap dialog
+      };
+    </script>
+    <div id="buttonDiv"></div>
+  </body>
+</html>
+
+"569311585811-7sc7pvot7md4n4dcsu67uoi2kjsaa4jn.apps.googleusercontent.com", -->
