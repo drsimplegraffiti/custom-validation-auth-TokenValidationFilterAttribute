@@ -24,6 +24,18 @@ namespace AuthFilterProj.Models
 
         [JsonIgnore]
         public List<Booking> Bookings { get; set; } = new List<Booking>();
+
+
+        //google auth properties
+        public string GoogleId { get; set; } = string.Empty;
+        public string GoogleEmail { get; set; } = string.Empty;
+        public string GoogleName { get; set; } = string.Empty;
+        public string GooglePictureUrl { get; set; } = string.Empty;
+        public string GoogleLocale { get; set; } = string.Empty;
+
+
+
+
         public User()
         {
             Role = "User";
